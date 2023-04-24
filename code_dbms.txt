@@ -1,0 +1,60 @@
+- Procedure which does group by information 
+CREATE OR REPLACE PROCEDURE User_role
+AS
+  cursor user_group is
+    select ROLE, count(*) as user_count
+    from Users
+    group by ROLE;
+BEGIN
+  for role_group in user_group
+loop
+    DBMS_OUTPUT.PUT_LINE(role_group.Role  || '| :' ||  role_group.user_count);
+  end loop;
+END;
+
+BEGIN
+  user_role();
+END;
+
+- Function which counts the number of records 
+CREATE OR REPLACE FUNCTION count_records(nameOfTable IN VARCHAR2)
+ RETURN NUMBER IS
+  countOfRecord NUMBER := 0;
+BEGIN
+  EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM ' || nameOfTable INTO countOfRecord;
+  RETURN countOfRecord;
+END;
+
+- Procedure which uses SQL%ROWCOUNT to determine the number of rows affected
+CREATE OR REPLACE PROCEDURE update_iphone_quantity AS
+BEGIN
+  UPDATE Product
+  SET Quantity = Quantity + 30
+  WHERE Name LIKE 'Iphone%';
+  DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' rows updated successfully.');
+END;
+
+- Add user-defined exception which disallows to enter title of item (e.g. book) to be less than 5 characters
+CREATE OR REPLACE TRIGGER check_password_length
+BEFORE INSERT ON Users
+FOR EACH ROW
+DECLARE
+  too_short exception;
+BEGIN
+  IF LENGTH(:new.password) < 5 THEN
+    RAISE too_short;
+  END IF;
+EXCEPTION
+  WHEN too_short THEN
+    raise_application_error(-20001, 'Password length should be at least 5 characters');
+END;
+
+- Create a trigger before insert on any entity which will show the current number of rows in the table
+CREATE OR REPLACE TRIGGER row_count_trigger
+BEFORE INSERT ON USERS
+DECLARE
+	row_count INT;
+BEGIN
+    SELECT COUNT(*) INTO row_count FROM USERS;
+    DBMS_OUTPUT.PUT_LINE('Current row count: ' || row_count);
+END;
